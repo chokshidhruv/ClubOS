@@ -1,15 +1,391 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ENUMS: For fixed set of options
+
+enum WorkspaceRole {
+  OWNER
+  PRESIDENT
+  EXECUTIVE
+  MEMBER
+  VIEWER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  REMOVED
+  PENDING
+}
+
+enum EventStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum EventRole {
+  EVENT_LEAD
+  MARKETING_LEAD
+  SPONSORSHIP_LEAD
+  FINANCE_LEAD
+  LOGISTICS_LEAD
+  VOLUNTEER
+  VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum DocumentType {
+  TEXT_NOTE
+  EXTERNAL_LINK
+  FILE_UPLOAD
+}
+
+enum DocumentCategory {
+  GENERAL
+  EVENT
+  SPONSOR
+  FINANCE
+  MARKETING
+  HANDOFF
+  MEETING_NOTES
+  CONTRACT
+  OTHER
+}
+
+enum DocumentVisibility {
+  EVERYONE
+  EXECUTIVES_ONLY
+  EVENT_TEAM_ONLY
+  SPONSORSHIP_ONLY
+  FINANCE_ONLY
+  OWNER_ONLY
+}
+
+enum SponsorStatus {
+  NOT_CONTACTED
+  CONTACTED
+  FOLLOW_UP_NEEDED
+  INTERESTED
+  CONFIRMED
+  REJECTED
+  ARCHIVED
+}
+
+enum SponsorTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  CUSTOM
+}
+
+// MODELS: Database tables
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships       WorkspaceMember[]
+  createdWorkspaces Workspace[]       @relation("WorkspaceCreatedBy")
+  invitationsSent   Invitation[]      @relation("InvitationCreatedBy")
+  eventMemberships  EventMember[]
+  ownedSponsors     Sponsor[]         @relation("SponsorOwner")
+  authoredNotes     SponsorNote[]
+  createdTasks      Task[]            @relation("TaskCreator")
+  assignedTasks     Task[]            @relation("TaskAssignee")
+  uploadedDocs      Document[]
+  activities        ActivityLog[]
+}
+
+model Workspace {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  university  String?
+  imageUrl    String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  archivedAt  DateTime?
+
+  createdBy   User              @relation("WorkspaceCreatedBy", fields: [createdById], references: [id])
+  members     WorkspaceMember[]
+  invitations Invitation[]
+  events      Event[]
+  documents   Document[]
+  sponsors    Sponsor[]
+  tasks       Task[]
+  activity    ActivityLog[]
+  handoffs    HandoffPackage[]
+
+  @@index([slug])
+  @@index([createdById])
+}
+
+model WorkspaceMember {
+  id          String           @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole
+  status      MembershipStatus @default(ACTIVE)
+  joinedAt    DateTime         @default(now())
+  removedAt   DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, role])
+}
+
+model Invitation {
+  id           String        @id @default(cuid())
+  workspaceId  String
+  email        String?
+  token        String        @unique
+  role         WorkspaceRole
+  expiresAt    DateTime
+  createdById  String
+  acceptedAt   DateTime?
+  acceptedById String?
+  revokedAt    DateTime?
+  createdAt    DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("InvitationCreatedBy", fields: [createdById], references: [id])
+
+  @@index([workspaceId])
+  @@index([token])
+  @@index([email])
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  workspaceId   String
+  name          String
+  description   String?
+  location      String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  status        EventStatus @default(PLANNING)
+  retrospective String?
+  createdById   String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  archivedAt    DateTime?
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members   EventMember[]
+  tasks     Task[]
+  documents Document[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, startsAt])
+}
+
+model EventMember {
+  id           String    @id @default(cuid())
+  eventId      String
+  userId       String
+  role         EventRole
+  assignedById String
+  createdAt    DateTime  @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  workspaceId String
+  eventId     String?
+  sponsorId   String?
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(NORMAL)
+  assigneeId  String?
+  createdById String
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  event     Event?    @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  sponsor   Sponsor?  @relation(fields: [sponsorId], references: [id], onDelete: SetNull)
+  assignee  User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy User      @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@index([workspaceId, status])
+  @@index([assigneeId, status])
+  @@index([eventId])
+  @@index([sponsorId])
+  @@index([dueDate])
+}
+
+model Document {
+  id          String             @id @default(cuid())
+  workspaceId String
+  eventId     String?
+  sponsorId   String?
+  title       String
+  description String?
+  type        DocumentType
+  category    DocumentCategory
+  visibility  DocumentVisibility @default(EVERYONE)
+  url         String?
+  content     String?
+  fileKey     String?
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  uploadedById String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  archivedAt  DateTime?
+
+  workspace  Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  event      Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  sponsor    Sponsor?      @relation(fields: [sponsorId], references: [id], onDelete: SetNull)
+  uploadedBy User          @relation(fields: [uploadedById], references: [id])
+  tags       DocumentTag[]
+
+  @@index([workspaceId, category])
+  @@index([workspaceId, visibility])
+  @@index([eventId])
+  @@index([sponsorId])
+}
+
+model DocumentTag {
+  id         String @id @default(cuid())
+  documentId String
+  label      String
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, label])
+  @@index([label])
+}
+
+model Sponsor {
+  id              String        @id @default(cuid())
+  workspaceId     String
+  companyName     String
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  status          SponsorStatus @default(NOT_CONTACTED)
+  tier            SponsorTier?
+  ownerId         String?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  amountCommitted Int?
+  academicYear    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  archivedAt      DateTime?
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner     User?         @relation("SponsorOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  notes     SponsorNote[]
+  tasks     Task[]
+  documents Document[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, ownerId])
+  @@index([nextFollowUpAt])
+}
+
+model SponsorNote {
+  id        String   @id @default(cuid())
+  sponsorId String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sponsor Sponsor @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([sponsorId, createdAt])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  workspaceId String
+  actorId     String
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor     User      @relation(fields: [actorId], references: [id])
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+}
+
+model HandoffPackage {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  academicYear String
+  title        String
+  summary      String?
+  publishedAt  DateTime?
+  createdById  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sections  HandoffSection[]
+
+  @@unique([workspaceId, academicYear])
+}
+
+model HandoffSection {
+  id        String   @id @default(cuid())
+  packageId String
+  title     String
+  role      String?
+  content   String
+  orderIdx  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  package HandoffPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId, orderIdx])
 }
