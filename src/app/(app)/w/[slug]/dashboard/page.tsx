@@ -32,7 +32,7 @@ export default async function DashboardPage({
 
   if (!workspace) notFound()
 
-  const member = workspace.members.find((m) => m.userId === user.id)
+  const member = workspace.members.find((m: { userId: string; role: string }) => m.userId === user.id)
 
   return (
     <div className="min-h-screen p-8">
