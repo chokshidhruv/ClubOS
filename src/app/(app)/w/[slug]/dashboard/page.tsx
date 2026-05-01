@@ -58,11 +58,11 @@ export default async function DashboardPage({
               <p className="text-sm text-gray-400">No events yet</p>
             ) : (
               <ul className="space-y-2">
-                {workspace.events.map((event) => (
-                  <li key={event.id} className="text-sm">
+                {workspace.events.map((event: { id: string; name: string; status: string }) => (
+                <li key={event.id} className="text-sm">
                     <span className="font-medium">{event.name}</span>
                     <span className="text-gray-400 ml-2">{event.status}</span>
-                  </li>
+                </li>
                 ))}
               </ul>
             )}
@@ -74,12 +74,12 @@ export default async function DashboardPage({
               Members ({workspace.members.length})
             </h2>
             <ul className="space-y-2">
-              {workspace.members.map((m) => (
-                <li key={m.id} className="text-sm flex justify-between">
-                  <span>{m.user.name ?? m.user.email}</span>
-                  <span className="text-gray-400">{m.role}</span>
-                </li>
-              ))}
+              {workspace.members.map((m: { id: string; role: string; user: { name: string | null; email: string } }) => (
+            <li key={m.id} className="text-sm flex justify-between">
+                <span>{m.user.name ?? m.user.email}</span>
+                <span className="text-gray-400">{m.role}</span>
+            </li>
+            ))}
             </ul>
           </div>
 
@@ -90,16 +90,16 @@ export default async function DashboardPage({
               <p className="text-sm text-gray-400">No activity yet</p>
             ) : (
               <ul className="space-y-2">
-                {workspace.activity.map((log) => (
-                  <li key={log.id} className="text-sm text-gray-600">
+                {workspace.activity.map((log: { id: string; action: string; createdAt: Date; actor: { name: string | null; email: string } }) => (
+                <li key={log.id} className="text-sm text-gray-600">
                     <span className="font-medium text-black">
-                      {log.actor.name ?? log.actor.email}
+                    {log.actor.name ?? log.actor.email}
                     </span>{" "}
                     {log.action}{" "}
                     <span className="text-gray-400 text-xs">
-                      {new Date(log.createdAt).toLocaleDateString()}
+                    {new Date(log.createdAt).toLocaleDateString()}
                     </span>
-                  </li>
+                </li>
                 ))}
               </ul>
             )}
