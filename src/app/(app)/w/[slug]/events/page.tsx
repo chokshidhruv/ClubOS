@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { getWorkspaceBySlug } from "@/modules/workspaces/queries"
+import { getEventsByWorkspace } from "@/modules/events/queries"
 import { can } from "@/lib/permissions"
 import { notFound } from "next/navigation"
 import Link from "next/link"
@@ -13,26 +14,10 @@ export default async function EventsPage({
   const user = await requireUser()
   const { slug } = await params
 
-  const workspace = await db.workspace.findUnique({
-    where: { slug },
-    include: {
-      events: {
-        where: { archivedAt: null },
-        orderBy: { createdAt: "desc" },
-        include: {
-          members: {
-            include: { user: true },
-          },
-          _count: {
-            select: { tasks: true },
-          },
-        },
-      },
-    },
-  })
-
+  const workspace = await getWorkspaceBySlug(slug)
   if (!workspace) notFound()
 
+  const events = await getEventsByWorkspace(workspace.id)
   const canCreate = await can(user.id, workspace.id, "event.create")
 
   const statusColors: Record<string, string> = {
@@ -48,19 +33,17 @@ export default async function EventsPage({
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Events</h1>
-          {canCreate && (
-            <CreateEventButton workspaceId={workspace.id} />
-          )}
+          {canCreate && <CreateEventButton workspaceId={workspace.id} />}
         </div>
 
-        {workspace.events.length === 0 ? (
+        {events.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <p className="text-lg mb-1">No events yet</p>
             <p className="text-sm">Create your first event to get started</p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {workspace.events.map((event) => (
+            {events.map((event) => (
               <Link
                 key={event.id}
                 href={`/w/${slug}/events/${event.id}`}

@@ -1,25 +1,16 @@
 import { requireUser } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { getUserWorkspaces } from "@/modules/workspaces/queries"
 import Link from "next/link"
 
 export default async function WorkspacesPage() {
   const user = await requireUser()
-
-  const memberships = await db.workspaceMember.findMany({
-    where: {
-      userId: user.id,
-      status: "ACTIVE",
-    },
-    include: {
-      workspace: true,
-    },
-  })
+  const memberships = await getUserWorkspaces(user.id)
 
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">Your Club Workspaces</h1>
+          <h1 className="text-2xl font-bold">Your Workspaces</h1>
           <Link
             href="/workspaces/new"
             className="bg-black text-white px-4 py-2 rounded-md text-sm"

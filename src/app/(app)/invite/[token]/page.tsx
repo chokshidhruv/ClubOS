@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { requireUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
+import { acceptInvitation } from "@/modules/members/services"
 
 export default async function AcceptInvitePage({
   params,
@@ -22,9 +23,7 @@ export default async function AcceptInvitePage({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold mb-2">Link no longer valid</h1>
-          <p className="text-gray-500 text-sm">
-            This invite has already been used or revoked.
-          </p>
+          <p className="text-gray-500 text-sm">This invite has already been used or revoked.</p>
         </div>
       </div>
     )
@@ -35,43 +34,16 @@ export default async function AcceptInvitePage({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-xl font-bold mb-2">Invite expired</h1>
-          <p className="text-gray-500 text-sm">
-            Ask the workspace admin to send a new invite.
-          </p>
+          <p className="text-gray-500 text-sm">Ask the workspace admin to send a new invite.</p>
         </div>
       </div>
     )
   }
 
-  const existingMember = await db.workspaceMember.findUnique({
-    where: {
-      workspaceId_userId: {
-        workspaceId: invitation.workspaceId,
-        userId: user.id,
-      },
-    },
-  })
-
-  if (existingMember) {
-    redirect(`/w/${invitation.workspace.slug}/dashboard`)
+  try {
+    const workspace = await acceptInvitation(token, user.id)
+    redirect(`/w/${workspace.slug}/dashboard`)
+  } catch {
+    redirect("/workspaces")
   }
-
-  await db.workspaceMember.create({
-    data: {
-      workspaceId: invitation.workspaceId,
-      userId: user.id,
-      role: invitation.role,
-      status: "ACTIVE",
-    },
-  })
-
-  await db.invitation.update({
-    where: { token },
-    data: {
-      acceptedAt: new Date(),
-      acceptedById: user.id,
-    },
-  })
-
-  redirect(`/w/${invitation.workspace.slug}/dashboard`)
 }

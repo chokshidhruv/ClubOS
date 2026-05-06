@@ -11,6 +11,7 @@ export async function getCurrentUser() {
     where: { id: clerkUser.id },
   })
 
+  // user exists in clerk but not in the db, create a new record
   if (!dbUser) {
     await db.user.create({
       data: {
