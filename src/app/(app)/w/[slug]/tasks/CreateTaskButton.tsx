@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
 
-export default function CreateEventButton({
+export default function CreateTaskButton({
   workspaceId,
 }: {
   workspaceId: string
@@ -20,16 +20,15 @@ export default function CreateEventButton({
     setError("")
 
     const form = e.currentTarget
-    const name = (form.elements.namedItem("name") as HTMLInputElement).value
+    const title = (form.elements.namedItem("title") as HTMLInputElement).value
     const description = (form.elements.namedItem("description") as HTMLTextAreaElement).value
-    const location = (form.elements.namedItem("location") as HTMLInputElement).value
-    const startsAt = (form.elements.namedItem("startsAt") as HTMLInputElement).value
-    const endsAt = (form.elements.namedItem("endsAt") as HTMLInputElement).value
+    const dueDate = (form.elements.namedItem("dueDate") as HTMLInputElement).value
+    const priority = (form.elements.namedItem("priority") as HTMLSelectElement).value
 
-    const res = await fetch(`/api/workspaces/${workspaceId}/events`, {
+    const res = await fetch(`/api/workspaces/${workspaceId}/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description, location, startsAt, endsAt }),
+      body: JSON.stringify({ title, description, dueDate, priority }),
     })
 
     const data = await res.json()
@@ -50,17 +49,17 @@ export default function CreateEventButton({
         onClick={() => setOpen(true)}
         className="text-sm bg-black text-white px-4 py-2 rounded-md"
       >
-        Create Event
+        Create Task
       </button>
 
-      <Modal title="Create Event" open={open} onClose={() => setOpen(false)}>
+      <Modal title="Create Task" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-1">Event Name</label>
+            <label className="block text-sm font-medium mb-1">Title</label>
             <input
-              name="name"
+              name="title"
               required
-              placeholder="Winter Networking Night"
+              placeholder="Book the room"
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
@@ -69,34 +68,30 @@ export default function CreateEventButton({
             <textarea
               name="description"
               rows={2}
-              placeholder="What is this event about?"
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <input
-              name="location"
-              placeholder="Room 201, Engineering Building"
+              placeholder="Optional details..."
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
+              <label className="block text-sm font-medium mb-1">Due Date</label>
               <input
-                name="startsAt"
-                type="datetime-local"
+                name="dueDate"
+                type="date"
                 className="w-full border rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
-              <input
-                name="endsAt"
-                type="datetime-local"
+              <label className="block text-sm font-medium mb-1">Priority</label>
+              <select
+                name="priority"
                 className="w-full border rounded px-3 py-2 text-sm"
-              />
+              >
+                <option value="LOW">Low</option>
+                <option value="NORMAL">Normal</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
             </div>
           </div>
 

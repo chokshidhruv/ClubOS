@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { cache } from "react"
 
 export type Action =
   | "workspace.manage"
@@ -124,6 +125,16 @@ const ROLE_PERMISSIONS: Record<WorkspaceRole, Action[]> = {
     "members.view",
   ],
 }
+
+// cache() memoizes per request: insread of n calls, it calls db once and the rest are cache hits. 
+// we check persmissions multiple times per request, so this is a big performance boost
+const getMember = cache(async (userId: string, workspaceId: string) => {
+  return db.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: { workspaceId, userId },
+    },
+  })
+})
 
 export async function can(
   userId: string,
