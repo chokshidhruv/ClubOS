@@ -136,6 +136,28 @@ const getMember = cache(async (userId: string, workspaceId: string) => {
   })
 })
 
+export function getAllowedVisibilities(role: string): string[] {
+  switch (role) {
+    case "OWNER":
+    case "PRESIDENT":
+    case "EXECUTIVE":
+      return [
+        "EVERYONE",
+        "EXECUTIVES_ONLY",
+        "EVENT_TEAM_ONLY",
+        "SPONSORSHIP_ONLY",
+        "FINANCE_ONLY",
+        "OWNER_ONLY",
+      ]
+    case "MEMBER":
+      return ["EVERYONE"]
+    case "VIEWER":
+      return ["EVERYONE"]
+    default:
+      return ["EVERYONE"]
+  }
+}
+
 export async function can(
   userId: string,
   workspaceId: string,
