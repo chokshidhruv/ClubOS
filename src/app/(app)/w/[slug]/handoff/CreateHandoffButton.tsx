@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
 
 export default function CreateHandoffButton({
   workspaceId,
@@ -41,6 +42,7 @@ export default function CreateHandoffButton({
     }
 
     setOpen(false)
+    toast.success("Handoff package created")
     router.push(`/w/${slug}/handoff/${data.id}`)
   }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 const ROLES = ["VIEWER", "MEMBER", "EXECUTIVE", "PRESIDENT"] as const
 
@@ -36,9 +37,11 @@ export default function ChangeRoleButton({
 
     if (!res.ok) {
       setRole(prev)
+      toast.error("Failed to change role")
       return
     }
 
+    toast.success("Role updated")
     router.refresh()
   }
 

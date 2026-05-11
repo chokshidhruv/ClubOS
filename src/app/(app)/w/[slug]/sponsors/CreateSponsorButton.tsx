@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
 
 export default function CreateSponsorButton({
   workspaceId,
@@ -49,6 +50,7 @@ export default function CreateSponsorButton({
     }
 
     setOpen(false)
+    toast.success("Sponsor added")
     router.refresh()
   }
 

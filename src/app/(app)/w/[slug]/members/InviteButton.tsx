@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 
 export default function InviteButton({
   workspaceId,
@@ -21,6 +22,7 @@ export default function InviteButton({
     const data = await res.json()
     setInviteUrl(data.inviteUrl)
     setLoading(false)
+    toast.success("Invite link generated")
   }
 
   async function copyLink() {

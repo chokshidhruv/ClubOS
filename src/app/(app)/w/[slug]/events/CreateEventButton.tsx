@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
 
 export default function CreateEventButton({
   workspaceId,
@@ -41,6 +42,7 @@ export default function CreateEventButton({
     }
 
     setOpen(false)
+    toast.success("Event created")
     router.refresh()
   }
 

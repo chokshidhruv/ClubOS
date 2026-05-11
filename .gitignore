@@ -46,3 +46,6 @@ CLAUDE.md
 /src/generated/prisma
 
 .vercel
+
+# dont need to commit seed data
+seed.ts

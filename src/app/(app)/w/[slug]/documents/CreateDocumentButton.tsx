@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
 
 export default function CreateDocumentButton({
   workspaceId,
@@ -43,6 +44,7 @@ export default function CreateDocumentButton({
     }
 
     setOpen(false)
+    toast.success("Document saved")
     router.refresh()
   }
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
 
 export default function AddSectionButton({
   workspaceId,
@@ -51,6 +52,7 @@ export default function AddSectionButton({
     }
 
     setOpen(false)
+    toast.success("Section added")
     router.refresh()
   }
 

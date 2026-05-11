@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function SponsorActions({
   workspaceId,
@@ -31,6 +32,7 @@ export default function SponsorActions({
 
     setNote("")
     setLoading(false)
+    toast.success("Note added")
     router.refresh()
   }
 
@@ -41,6 +43,7 @@ export default function SponsorActions({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     })
+    toast.success("Status updated")
     router.refresh()
   }
 

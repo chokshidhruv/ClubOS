@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth"
 import { getWorkspaceBySlug } from "@/modules/workspaces/queries"
 import { getTasksByWorkspace } from "@/modules/tasks/queries"
+import { getMembersByWorkspace } from "@/modules/members/queries"
 import { can } from "@/lib/permissions"
 import { notFound } from "next/navigation"
 import CreateTaskButton from "./CreateTaskButton"
@@ -17,8 +18,13 @@ export default async function TasksPage({
   const workspace = await getWorkspaceBySlug(slug)
   if (!workspace) notFound()
 
-  const tasks = await getTasksByWorkspace(workspace.id)
-  const canCreate = await can(user.id, workspace.id, "task.create")
+  const [tasks, members, canCreate] = await Promise.all([
+    getTasksByWorkspace(workspace.id),
+    getMembersByWorkspace(workspace.id),
+    can(user.id, workspace.id, "task.create"),
+  ])
+
+  const memberOptions = members.map((m) => ({ id: m.userId, name: m.user.name, email: m.user.email }))
 
   return (
     <div className="p-8">
@@ -26,7 +32,7 @@ export default async function TasksPage({
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold">Tasks</h1>
           {canCreate && (
-            <CreateTaskButton workspaceId={workspace.id} />
+            <CreateTaskButton workspaceId={workspace.id} members={memberOptions} />
           )}
         </div>
 

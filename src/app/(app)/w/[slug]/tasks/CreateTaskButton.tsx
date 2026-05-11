@@ -3,11 +3,16 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/shared/Modal"
+import { toast } from "sonner"
+
+type Member = { id: string; name: string | null; email: string }
 
 export default function CreateTaskButton({
   workspaceId,
+  members = [],
 }: {
   workspaceId: string
+  members?: Member[]
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -24,11 +29,12 @@ export default function CreateTaskButton({
     const description = (form.elements.namedItem("description") as HTMLTextAreaElement).value
     const dueDate = (form.elements.namedItem("dueDate") as HTMLInputElement).value
     const priority = (form.elements.namedItem("priority") as HTMLSelectElement).value
+    const assigneeId = (form.elements.namedItem("assigneeId") as HTMLSelectElement).value
 
     const res = await fetch(`/api/workspaces/${workspaceId}/tasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, dueDate, priority }),
+      body: JSON.stringify({ title, description, dueDate, priority, assigneeId: assigneeId || undefined }),
     })
 
     const data = await res.json()
@@ -40,6 +46,7 @@ export default function CreateTaskButton({
     }
 
     setOpen(false)
+    toast.success("Task created")
     router.refresh()
   }
 
@@ -72,6 +79,19 @@ export default function CreateTaskButton({
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
+          {members.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Assignee</label>
+              <select name="assigneeId" className="w-full border rounded px-3 py-2 text-sm">
+                <option value="">Unassigned</option>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name ?? m.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Due Date</label>

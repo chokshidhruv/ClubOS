@@ -18,7 +18,7 @@ export async function logActivity(input: LogActivityInput) {
       action: input.action,
       targetType: input.targetType,
       targetId: input.targetId ?? null,
-      metadata: input.metadata ?? null as Prisma.InputJsonValue,
+      metadata: (input.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   })
 }

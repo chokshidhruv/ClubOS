@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type Task = {
   id: string
@@ -48,6 +49,7 @@ export default function TaskList({
       body: JSON.stringify({ status }),
     })
     setUpdating(null)
+    toast.success(status === "DONE" ? "Marked as done" : "Task reopened")
     router.refresh()
   }
 
