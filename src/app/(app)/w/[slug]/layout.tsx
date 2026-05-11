@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
+import SearchBar from "@/components/shared/SearchBar"
 
 export default async function WorkspaceLayout({
   children,
@@ -52,6 +53,10 @@ export default async function WorkspaceLayout({
           </Link>
           <h2 className="font-bold text-sm mt-2 truncate">{workspace.name}</h2>
           <span className="text-xs text-gray-400">{member.role}</span>
+        </div>
+
+        <div className="mb-2">
+          <SearchBar workspaceId={workspace.id} slug={slug} />
         </div>
 
         {/* Nav links */}
