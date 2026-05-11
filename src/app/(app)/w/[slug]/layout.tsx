@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import SearchBar from "@/components/shared/SearchBar"
+import SidebarNav from "./SidebarNav"
 
 export default async function WorkspaceLayout({
   children,
@@ -60,15 +61,7 @@ export default async function WorkspaceLayout({
         </div>
 
         {/* Nav links */}
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="text-sm px-3 py-2 rounded hover:bg-gray-200 transition text-gray-700"
-          >
-            {item.label}
-          </Link>
-        ))}
+        <SidebarNav items={navItems} />
 
         {/* Bottom */}
         <div className="mt-auto pt-4 border-t">

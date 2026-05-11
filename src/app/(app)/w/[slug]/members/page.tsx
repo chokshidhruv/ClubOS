@@ -4,6 +4,7 @@ import { getMembersByWorkspace } from "@/modules/members/queries"
 import { can } from "@/lib/permissions"
 import { notFound } from "next/navigation"
 import InviteButton from "./InviteButton"
+import ChangeRoleButton from "./ChangeRoleButton"
 
 export default async function MembersPage({
   params,
@@ -37,10 +38,12 @@ export default async function MembersPage({
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs bg-gray-100 px-2 py-1 rounded">{m.role}</span>
-                {canChangeRoles && m.userId !== user.id && (
-                  <span className="text-xs text-gray-400 cursor-pointer hover:text-black">
-                    Change role
-                  </span>
+                {canChangeRoles && m.userId !== user.id && m.role !== "OWNER" && (
+                  <ChangeRoleButton
+                    workspaceId={workspace.id}
+                    memberId={m.id}
+                    currentRole={m.role}
+                  />
                 )}
               </div>
             </div>

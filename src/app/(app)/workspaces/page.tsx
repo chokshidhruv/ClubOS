@@ -19,6 +19,15 @@ export default async function WorkspacesPage() {
           </Link>
         </div>
 
+        <div className="mb-4">
+          <Link
+            href="/workspaces/tasks"
+            className="text-sm text-gray-500 hover:text-black"
+          >
+            My Tasks →
+          </Link>
+        </div>
+
         {memberships.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
             <p className="text-lg mb-2">No workspaces yet</p>

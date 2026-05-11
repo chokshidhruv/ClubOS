@@ -3,6 +3,35 @@ import { logActivity } from "@/lib/activity"
 import { randomBytes } from "crypto"
 import type { WorkspaceRole } from "@prisma/client"
 
+export async function changeMemberRole(
+  actorId: string,
+  workspaceId: string,
+  memberId: string,
+  newRole: WorkspaceRole
+) {
+  const target = await db.workspaceMember.findUnique({ where: { id: memberId } })
+  if (!target) throw new Error("Member not found")
+  if (target.role === "OWNER") throw new Error("Cannot change the workspace owner's role")
+  if (target.userId === actorId) throw new Error("Cannot change your own role")
+
+  const oldRole = target.role
+  const updated = await db.workspaceMember.update({
+    where: { id: memberId },
+    data: { role: newRole },
+  })
+
+  await logActivity({
+    workspaceId,
+    actorId,
+    action: "workspace.role_changed",
+    targetType: "member",
+    targetId: memberId,
+    metadata: { oldRole, newRole },
+  })
+
+  return updated
+}
+
 export async function createInvitation(
   createdById: string,
   workspaceId: string,
